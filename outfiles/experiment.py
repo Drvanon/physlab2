@@ -70,7 +70,4 @@ class Experiment:
         self.zeroed_weight = self.weight - np.average(trueZero)
 
     def maxWeight(self):
-        return  np.min(self.weight)
-
-
-
+        return np.min(self.weight)

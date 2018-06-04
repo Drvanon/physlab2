@@ -4,7 +4,6 @@ import click, re, os, numpy as np
 import matplotlib.pyplot as plt
 from numpy import exp
 import itertools as it
-import pdb
 
 from experiment import Experiment, get_experiment_series
 
@@ -31,11 +30,9 @@ def all(folder):
     plt.show()
 
 @cli.command()
-@click.option('--infile', '-i',
-        type=click.Path(), multiple=True)
-@click.option('--zero/--no-zero', '-z/-nz',
-    help='Set the true zero to be the average of the last centimeter',
-    default=False)
+@click.option('--infile', '-i', type=click.Path(), multiple=True)
+@click.option('--zero/--no-zero', '-z/-nz', default=False,
+    help='Set the true zero to be the average of the last centimeter')
 def show(infile, zero=False):
     """
     Render data in provided input file using row 2 and 3.
@@ -70,25 +67,13 @@ def max(folder):
     plt.plot([ex.height for ex in experiments], [ex.maxWeight() for ex in experiments])
     plt.show()
 
-def smooth_values(distance, weight, fwhm=3):
-    def fwhm2sigma(fwhm):
-        return fwhm / np.sqrt(8 * np.log(2))
-
-    sigma = fwhm2sigma(fwhm)
-    smoothed_vals = np.zeros(weight.shape)
-    for i, d in enumerate(distance):
-        kernel = np.exp(-(distance - d) ** 2 / (2 * sigma ** 2))
-        kernel = kernel / sum(kernel)
-        smoothed_vals[i] = sum(weight * kernel)
-    return smoothed_vals
-
 @cli.command()
 @click.argument('infile', type=click.Path())
 @click.option('--dx', default=0.1)
 @click.option('--minval', default=1, type=int)
 @click.option('--plot/--no-plot', default=False)
 @click.option('--fwmh', default=3)
-def smooth(infile, dx, minval, plot, fwmh):
+def find_breaks(infile, dx, minval, plot, fwmh):
     """
     Find the breaking point of the provided graph
     """
