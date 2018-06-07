@@ -2,26 +2,32 @@ import numpy as np
 import os, re, itertools as it
 from matplotlib import pyplot as plt
 
-def get_experiment_series(folder):
+def get_experiment_series(folder, mT=False):
     experiments = []
     for roots, dirs, files in os.walk(folder):
         for f in files:
             experiments.append(
-                    Experiment(os.path.join(folder, f)))
-    return experiments
+                    Experiment(os.path.join(folder, f), mT))
+    return sorted(experiments, key=lambda x: x.height)
 
 class Experiment:
-    def __init__(self, inf):
+    def __init__(self, inf, mT=False):
+        self.inf = inf
         with open(inf) as f:
             header = f.readline()
             prog = re.compile('\#(.*?)mm')
+            prog2 = re.compile(':(.*?)mT')
+            self.magnet = None
             try:
-                self.height = prog.match(header).groups()[0]
+                self.height = int(prog.match(header).groups()[0])
+                if mT:
+                    self.magnet = int(prog2.match(header).groups()[0])
             except:
                 raise ValueError('File {} has no height in header'.format(inf))
         a = np.loadtxt(inf, skiprows=2, delimiter=',')
         self.distance = a[:, 1]
         self.weight = a[:, 2]
+        self.shifted_distance = self.distance + self.height
         self.trueZero()
         self.smooth()
 
@@ -71,3 +77,9 @@ class Experiment:
 
     def maxWeight(self):
         return np.min(self.weight)
+
+    def find_max_distance(self, shifted):
+        if shifted:
+            return self.shifted_distance[np.argmin(self.weight)]
+        else:
+            return self.distance[np.argmin(self.weight)]
